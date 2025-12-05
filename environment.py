@@ -10,33 +10,66 @@ import numpy as np
 import gymnasium as gym
 
 
+def adaptive_linspace(start, end, num, critical_center=0.0, concentration=2.0):
+    """
+    Cria bins não-uniformes com maior resolução próximo ao ponto crítico.
+    
+    FASE 2: Binning adaptativo para concentrar estados nas regiões críticas.
+    
+    Args:
+        start (float): Valor inicial do range
+        end (float): Valor final do range
+        num (int): Número de bins
+        critical_center (float): Ponto onde concentrar bins (padrão: 0.0)
+        concentration (float): Fator de concentração (>1 = mais concentrado)
+    
+    Returns:
+        np.ndarray: Array de bins não-uniformes
+    """
+    # Cria espaçamento uniforme em [-1, 1]
+    uniform = np.linspace(-1, 1, num)
+    
+    # Aplica função não-linear para concentrar no centro
+    # sign(x) * |x|^concentration redistribui pontos
+    concentrated = np.sign(uniform) * np.abs(uniform) ** concentration
+    
+    # Escala para o range desejado, centrado no ponto crítico
+    half_range = (end - start) / 2
+    bins = critical_center + concentrated * half_range
+    
+    return bins
+
+
 def create_bins():
     """
     Cria os bins para discretização do espaço de estados do CartPole.
     
     O espaço de estados contínuo (4D) é discretizado em:
     - Cart Position (x): 6 bins
-    - Cart Velocity (x_dot): 6 bins (limites fixos: -0.5 a 0.5 m/s)
+    - Cart Velocity (x_dot): 6 bins (limites: -1.5 a 1.5 m/s) [MELHORADO]
     - Pole Angle (theta): 10 bins
-    - Pole Angular Velocity (theta_dot): 10 bins (limites fixos: -50 a 50 deg/s)
+    - Pole Angular Velocity (theta_dot): 10 bins (limites: -150 a 150 deg/s) [MELHORADO]
     
     Returns:
         tuple: (cart_pos_bins, cart_vel_bins, pole_angle_bins, pole_ang_vel_bins)
                Cada elemento é um array numpy com os limites dos bins.
     """
-    # Cart Position: usa limites do ambiente (aproximadamente -2.4 a 2.4)
-    cart_pos_bins = np.linspace(-2.4, 2.4, 6 - 1)
+    # FASE 2: Binning adaptativo não-uniforme com 8x8x12x12 = 9216 estados
+    # Concentra resolução nas regiões críticas (θ≈0, velocidades baixas)
     
-    # Cart Velocity: limites fixos para capturar movimento sutil
-    cart_vel_bins = np.linspace(-0.5, 0.5, 6 - 1)
+    # 8 bins para posição e velocidade do carrinho
+    # concentration=1.5 para posição (menos crítico)
+    cart_pos_bins = adaptive_linspace(-2.4, 2.4, 8 - 1, critical_center=0.0, concentration=1.5)
     
-    # Pole Angle: usa limites do ambiente (aproximadamente -0.209 a 0.209 rad = ±12°)
-    # Mas vamos usar um range maior para maior robustez
-    pole_angle_bins = np.linspace(-0.418, 0.418, 10 - 1)  # ±24°
+    # concentration=2.0 para velocidade (mais crítico para estabilidade)
+    cart_vel_bins = adaptive_linspace(-1.5, 1.5, 8 - 1, critical_center=0.0, concentration=2.0)
     
-    # Pole Angular Velocity: limites fixos convertidos para rad/s
-    # 50 deg/s = 50 * pi/180 ≈ 0.873 rad/s
-    pole_ang_vel_bins = np.linspace(-0.873, 0.873, 10 - 1)
+    # 12 bins para ângulo e velocidade angular (mais críticos)
+    # concentration=2.5 para ângulo (extremamente crítico - vertical é θ=0)
+    pole_angle_bins = adaptive_linspace(-0.418, 0.418, 12 - 1, critical_center=0.0, concentration=2.5)
+    
+    # concentration=2.0 para velocidade angular (crítico para controle)
+    pole_ang_vel_bins = adaptive_linspace(-2.618, 2.618, 12 - 1, critical_center=0.0, concentration=2.0)
     
     return (cart_pos_bins, cart_vel_bins, pole_angle_bins, pole_ang_vel_bins)
 

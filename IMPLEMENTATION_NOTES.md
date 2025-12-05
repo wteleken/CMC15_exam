@@ -357,6 +357,60 @@ pip install -r requirements.txt
 
 ---
 
+## 🚀 Otimizações Implementadas (Fases 1A, 1B, 2)
+
+### Resumo das Melhorias
+
+**Performance Final (12,000 episódios):**
+- Q-Learning: 21.87 → **114.89 timesteps** (+425%, 5.25x)
+- SARSA: 20.85 → **113.32 timesteps** (+444%, 5.43x)
+
+### Fase 1A: Epsilon Adaptativo
+```python
+EPSILON_DECAY = 0.9995  # Antes: 0.998
+EPSILON_MIN = 0.05      # Antes: 0.01
+```
+**Impacto**: Exploração prolongada até episódio ~9,200, consolidando política ótima.
+
+### Fase 1B: Reward Shaping
+```python
+# Adicionado em train.py
+stability_bonus = 0.2 * (1.0 - abs(pole_angle) / 0.209)
+velocity_penalty = -0.05 * (abs(cart_vel) + abs(pole_vel))
+reward = reward + stability_bonus + velocity_penalty
+```
+**Impacto**: Guia aprendizado para estados estáveis (θ≈0) e movimentos suaves.
+
+### Fase 2: Binning Adaptativo Não-Uniforme
+```python
+# Adicionado em environment.py
+def adaptive_linspace(start, end, num, concentration=2.0):
+    uniform = np.linspace(-1, 1, num)
+    concentrated = np.sign(uniform) * np.abs(uniform) ** concentration
+    return critical_center + concentrated * half_range
+
+# 8×8×12×12 = 9,216 estados (antes: 3,600)
+cart_pos: 8 bins (concentration=1.5)
+cart_vel: 8 bins (concentration=2.0)
+pole_angle: 12 bins (concentration=2.5)  ← Mais crítico
+pole_vel: 12 bins (concentration=2.0)
+```
+**Impacto**: Maior resolução em regiões críticas (θ≈0), melhor controle fino.
+
+### Resultados Comparativos
+
+| Fase | Q-Learning | SARSA | Exploração Q | Exploração S |
+|------|-----------|-------|--------------|--------------|
+| Baseline | 21.87 ts | 20.85 ts | 6.92% | 8.81% |
+| Fase 0 | 49.51 ts | 39.77 ts | 13.25% | 10.22% |
+| **Final** | **114.89 ts** | **113.32 ts** | **14.59%** | **14.89%** |
+
+**Máximos Atingidos:**
+- Q-Learning: 331 timesteps
+- SARSA: 436 timesteps
+
+---
+
 **Boa sorte com o relatório! 🚀**
 
 *Este documento foi criado para facilitar a continuidade do trabalho e escrita do relatório final. Qualquer dúvida, consulte o código-fonte com comentários detalhados.*

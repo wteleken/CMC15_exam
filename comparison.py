@@ -38,16 +38,16 @@ def main():
     # Configuração de seeds para reprodutibilidade
     np.random.seed(42)
     
-    # Hiperparâmetros fixos (conforme especificação)
-    ALPHA = 0.1
-    GAMMA = 0.99
-    EPSILON = 1.0
-    EPSILON_DECAY = 0.995
-    EPSILON_MIN = 0.01
-    EPISODES = 5000
+    # Hiperparâmetros melhorados - FASE 1A + FASE 2
+    ALPHA = 0.2              # Aumentado de 0.1 para aprendizado mais rápido
+    GAMMA = 0.99             # Mantido
+    EPSILON = 1.0            # Mantido
+    EPSILON_DECAY = 0.9995   # FASE 1A: Decay muito mais lento (~9200 ep para ε=0.05)
+    EPSILON_MIN = 0.05       # FASE 1A: Maior que antes para manter exploração
+    EPISODES = 12000         # Mais episódios para convergência completa
     
-    # Configuração do espaço de estados discreto
-    STATE_SHAPE = (6, 6, 10, 10)  # (x, x_dot, theta, theta_dot)
+    # Configuração do espaço de estados discreto - FASE 2
+    STATE_SHAPE = (8, 8, 12, 12)  # FASE 2: Binning adaptativo (9216 estados)
     N_ACTIONS = 2  # Esquerda ou Direita
     
     # Cria bins de discretização
@@ -85,6 +85,7 @@ def main():
         bins=bins,
         episodes=EPISODES,
         is_sarsa=False,
+        use_reward_shaping=True,  # FASE 1B
         verbose=True
     )
     
@@ -118,6 +119,7 @@ def main():
         bins=bins,
         episodes=EPISODES,
         is_sarsa=True,
+        use_reward_shaping=True,  # FASE 1B
         verbose=True
     )
     

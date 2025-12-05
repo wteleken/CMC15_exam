@@ -8,7 +8,7 @@ com lógica específica para cada algoritmo.
 from environment import create_environment, discretize_state
 
 
-def train_agent(agent, bins, episodes=5000, is_sarsa=False, verbose=True):
+def train_agent(agent, bins, episodes=5000, is_sarsa=False, use_reward_shaping=True, verbose=True):
     """
     Treina um agente de RL no ambiente CartPole.
     
@@ -17,6 +17,7 @@ def train_agent(agent, bins, episodes=5000, is_sarsa=False, verbose=True):
         bins (tuple): Bins de discretização (retorno de create_bins())
         episodes (int): Número de episódios de treinamento
         is_sarsa (bool): Se True, usa lógica SARSA; se False, usa Q-Learning
+        use_reward_shaping (bool): Se True, adiciona reward shaping (FASE 1B)
         verbose (bool): Se True, imprime progresso a cada 500 episódios
     
     Returns:
@@ -47,6 +48,20 @@ def train_agent(agent, bins, episodes=5000, is_sarsa=False, verbose=True):
             # Executa ação no ambiente
             obs, reward, terminated, truncated, info = env.step(action)
             done = terminated or truncated
+            
+            # FASE 1B: Reward Shaping
+            if use_reward_shaping:
+                cart_pos, cart_vel, pole_angle, pole_vel = obs
+                
+                # Bônus de estabilidade (quanto mais próximo de vertical, melhor)
+                # theta_threshold = 0.209 rad (12 graus)
+                stability_bonus = 0.2 * (1.0 - abs(pole_angle) / 0.209)
+                
+                # Penalidade de velocidade (penaliza movimentos bruscos)
+                velocity_penalty = -0.05 * (abs(cart_vel) + abs(pole_vel))
+                
+                # Recompensa moldada
+                reward = reward + stability_bonus + velocity_penalty
             
             # Discretiza próximo estado
             next_state = discretize_state(obs, bins)
