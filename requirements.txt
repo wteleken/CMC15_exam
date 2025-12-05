@@ -1,0 +1,14 @@
+# Requirements for CartPole Reinforcement Learning Project
+# CMC15 - ITA
+
+# Core RL environment
+gymnasium>=0.29.0
+
+# Numerical computing (compatible with Python 3.12)
+numpy>=1.26.0
+
+# Visualization
+matplotlib>=3.8.0
+
+# Manual control interface (optional, for manual_control.py)
+pygame>=2.5.0
