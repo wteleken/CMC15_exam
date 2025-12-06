@@ -1,81 +1,75 @@
 """
 ═══════════════════════════════════════════════════════════════════════
-    ESTRUTURA DO PROJETO - CARTPOLE RL
+    ESTRUTURA DO PROJETO - CARTPOLE RL (FINAL)
 ═══════════════════════════════════════════════════════════════════════
 """
 
 ARQUIVOS_CORE = {
     'agents.py': 'Q-Learning, SARSA e SARSA(λ) com Eligibility Traces',
-    'train.py': 'Loop de treino (suporta λ-traces + UCB + alpha adaptativo)',
-    'environment.py': 'Discretização refinada 6×6×18×18 = 11,664 estados',
-    'comparison.py': 'Comparação Q-Learning vs SARSA (resultados anteriores)',
-}
-
-ARQUIVOS_ANALISE = {
-    'analyze_results.py': 'Análise estatística das Q-tables',
-    'evaluate.py': 'Visualização dos agentes treinados',
+    'train.py': 'Loop de treino universal (λ-traces + UCB + alpha adaptativo)',
+    'environment.py': 'Discretização adaptativa (6×6×18×18 ou 8×8×12×12)',
+    'final_execution.py': '🚀 SCRIPT PRINCIPAL - Treina 3 modelos + gera gráficos',
 }
 
 MODELOS_TREINADOS = {
-    'qlearning_qtable.pkl': 'Q-Learning: 314 ± 228 ts (25k eps)',
-    'sarsa_qtable.pkl': 'SARSA Otimizado: 178 ± 45 ts (50k eps)',
-    # SARSA(λ) não salvo - treinar com novo código conforme necessário
+    'final_q-learning_qtable.pkl': 'Q-Learning: ~32 ts (25k eps, 8×8×12×12)',
+    'final_sarsa_otimizado_qtable.pkl': 'SARSA Otim: ~37 ts (50k eps, 8×8×12×12)',
+    'final_sarsalambda_qtable.pkl': 'SARSA(λ): ~191 ts (5k eps, 6×6×18×18)',
 }
 
 DOCUMENTACAO = {
     'README.md': 'Documentação principal do projeto',
-    'RESULTADOS_FINAIS_COMPLETOS.md': 'Resultados completos e análise detalhada',
-    'requirements.txt': 'Dependências Python',
+    'RESULTADOS_FINAIS_COMPLETOS.md': 'Análise completa dos 3 algoritmos',
+    'requirements.txt': 'Dependências Python (gymnasium, numpy, matplotlib)',
 }
 
 VISUALIZACAO = {
-    'comparison_result.png': 'Gráfico comparativo final',
+    'comparison_result.png': '📊 Comparação de Performance (3 algoritmos)',
+    'policy_heatmaps.png': '🗺️  Heatmaps das Políticas (fronteiras de decisão)',
 }
 
-# Ordem de execução recomendada
+# Execução recomendada
 ORDEM_EXECUCAO = [
-    '# RESULTADOS ANTERIORES (já executados):',
-    '1. python comparison.py      # Q-Learning vs SARSA (~105 min)',
-    '2. python analyze_results.py # Análise estatística',
-    '3. python evaluate.py         # Visualização',
+    '# SCRIPT PRINCIPAL (executa tudo):',
+    'python final_execution.py',
     '',
-    '# NOVO - SARSA(λ) com Eligibility Traces:',
-    '# Para treinar SARSA(λ), usar agents.SarsaLambdaAgent em scripts customizados',
-    '# Resultados: 316 ts (5k eps) - MELHOR PERFORMANCE GERAL!',
+    '# Tempo: ~30-40 minutos',
+    '# Gera: 2 gráficos (.png) + 3 Q-tables (.pkl)',
+    '',
+    '# Resultados finais:',
+    '• Q-Learning:      ~32 ts (25k eps)',
+    '• SARSA Otimizado: ~37 ts (50k eps)',
+    '• SARSA(λ):        ~191 ts (5k eps) 🏆',
 ]
 
 def print_structure():
     print("\n╔═══════════════════════════════════════════════════════════════════╗")
-    print("║              ESTRUTURA DO PROJETO - CARTPOLE RL                   ║")
+    print("║              ESTRUTURA DO PROJETO - CARTPOLE RL (FINAL)          ║")
     print("╚═══════════════════════════════════════════════════════════════════╝\n")
     
     print("📦 CÓDIGO PRINCIPAL")
     for file, desc in ARQUIVOS_CORE.items():
-        print(f"  • {file:<25} {desc}")
-    
-    print("\n📊 ANÁLISE E VISUALIZAÇÃO")
-    for file, desc in ARQUIVOS_ANALISE.items():
-        print(f"  • {file:<25} {desc}")
+        print(f"  • {file:<30} {desc}")
     
     print("\n💾 MODELOS TREINADOS")
     for file, desc in MODELOS_TREINADOS.items():
-        print(f"  • {file:<25} {desc}")
+        print(f"  • {file:<30} {desc}")
     
     print("\n📝 DOCUMENTAÇÃO")
     for file, desc in DOCUMENTACAO.items():
-        print(f"  • {file:<25} {desc}")
+        print(f"  • {file:<30} {desc}")
     
     print("\n🎨 VISUALIZAÇÃO")
     for file, desc in VISUALIZACAO.items():
-        print(f"  • {file:<25} {desc}")
+        print(f"  • {file:<30} {desc}")
     
-    print("\n🚀 ORDEM DE EXECUÇÃO")
+    print("\n🚀 EXECUÇÃO")
     for step in ORDEM_EXECUCAO:
         print(f"  {step}")
     
     print("\n" + "═"*71)
-    print("Total: 8 arquivos core + 2 análise + 3 docs + 2 modelos")
-    print("Projeto limpo e consolidado - pronto para entrega!")
+    print("Total: 4 scripts core + 3 modelos + 3 docs + 2 gráficos")
+    print("✅ Projeto limpo e finalizado - pronto para entrega!")
     print("═"*71 + "\n")
 
 if __name__ == "__main__":
