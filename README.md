@@ -7,17 +7,16 @@ Daniel da Silveira Sahadi | Pablo Carvalho | Thiago Galante | Willian Teleken
 
 ## 🏆 Resultados Finais
 
-| Algoritmo | Performance | Episódios | Status |
-|-----------|-------------|-----------|--------|
-| **🥇 SARSA(λ=0.9)** | **316 ± 180 ts** | 5k | ⭐ **MELHOR** |
-| 🥈 Q-Learning | 314 ± 228 ts | 25k | Referência |
-| 🥉 SARSA Otimizado | 178 ± 45 ts | 50k | 100% exploração |
-| SARSA Baseline | 57 ± 19 ts | 25k | Baseline |
+| Algoritmo | Performance | Episódios | Eficiência |
+|-----------|-------------|-----------|------------|
+| **🥇 SARSA(λ=0.9)** | **~191 ts** | 5k | ⭐⭐⭐⭐⭐ |
+| 🥈 SARSA Otimizado | ~37 ts | 50k | ⭐⭐⭐ |
+| 🥉 Q-Learning | ~32 ts | 25k | ⭐⭐⭐⭐ |
 
 **Destaques:**
-- ✅ SARSA(λ) superou todos com **5x menos episódios**
-- ✅ Melhoria de **+910%** sobre SARSA baseline
-- ✅ Pico de **17,243 timesteps** (melhor estabilidade)
+- ✅ SARSA(λ) **5-10x mais eficiente** (mesma performance, menos episódios)
+- ✅ Eligibility Traces transformam algoritmos on-policy
+- ✅ Gráficos de alta qualidade para relatório
 
 ---
 
@@ -28,20 +27,22 @@ CMC15_exam/
 ├── 📦 Core
 │   ├── agents.py              # Q-Learning, SARSA e SARSA(λ)
 │   ├── train.py               # Loop de treino universal
-│   ├── environment.py         # Discretização refinada (6,6,18,18)
-│   └── comparison.py          # Comparação Q-Learning vs SARSA
-│
-├── 📊 Análise
-│   ├── analyze_results.py     # Análise estatística
-│   └── evaluate.py            # Visualização
+│   ├── environment.py         # Discretização adaptativa
+│   └── final_execution.py     # 🚀 SCRIPT PRINCIPAL
 │
 ├── 📝 Documentação
 │   ├── README.md              # Este arquivo
-│   └── RESULTADOS_FINAIS_COMPLETOS.md  # Análise detalhada
+│   ├── RESULTADOS_FINAIS_COMPLETOS.md  # Análise detalhada
+│   └── PROJECT_STRUCTURE.py   # Estrutura do projeto
 │
-└── 💾 Modelos
-    ├── qlearning_qtable.pkl   # 314 ts (25k eps)
-    └── sarsa_qtable.pkl       # 178 ts (50k eps)
+├── 💾 Modelos (Q-tables)
+│   ├── final_q-learning_qtable.pkl
+│   ├── final_sarsa_otimizado_qtable.pkl
+│   └── final_sarsalambda_qtable.pkl
+│
+└── 📊 Gráficos
+    ├── comparison_result.png   # Comparação de performance
+    └── policy_heatmaps.png     # Heatmaps das políticas
 ```
 
 ---
@@ -55,23 +56,35 @@ source .venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-### Uso Básico
+### Execução Principal
 
-#### 1. Ver Resultados Anteriores
+#### Treinar todos os modelos e gerar gráficos
 ```bash
-python analyze_results.py  # Análise estatística
-python evaluate.py         # Visualização dos agentes
+python final_execution.py
 ```
 
-#### 2. Treinar SARSA(λ) - Melhor Performance
+**Tempo:** ~30-40 minutos  
+**Gera:** 2 gráficos (.png) + 3 Q-tables (.pkl)
+
+---
+
+Os gráficos já estão prontos:
+- `comparison_result.png` - Comparação de performance
+- `policy_heatmaps.png` - Fronteiras de decisão
+
+---
+
+## 💡 Uso Programático
+
+### Treinar SARSA(λ) Customizado
 ```python
 from environment import create_bins
 from agents import SarsaLambdaAgent
 from train import train_agent
 
-# Configuração
-state_shape = (6, 6, 18, 18)
-bins = create_bins(state_shape)
+# Configuração (bins refinados)
+bins = create_bins()  # Padrão: (6, 6, 18, 18)
+state_shape = tuple(len(b) + 1 for b in bins)
 
 # Criar agente
 agent = SarsaLambdaAgent(
@@ -85,16 +98,10 @@ agent = SarsaLambdaAgent(
     lambda_factor=0.9
 )
 
-# Treinar (5k episódios = ~15 min)
-rewards = train_agent(agent, bins, episodes=5000, is_sarsa=True, 
-                     use_reward_shaping=True)
+# Treinar (5k episódios)
+rewards = train_agent(agent, bins, episodes=5000, is_sarsa=True)
 
 print(f"Performance: {np.mean(rewards[-100:])} timesteps")
-```
-
-#### 3. Re-treinar Q-Learning e SARSA (opcional)
-```bash
-python comparison.py  # ~105 min
 ```
 
 ---
