@@ -12,7 +12,7 @@ Daniel da Silveira Sahadi | Pablo Carvalho | Thiago Galante | Willian Teleken
 | **🥇 SARSA(λ=0.9)** | **316 ± 180 ts** | 5,000 | ⭐⭐⭐⭐⭐ |
 | 🥈 Q-Learning | 314 ± 228 ts | 25,000 | ⭐⭐⭐ |
 | 🥉 SARSA Otimizado | 178 ± 45 ts | 50,000 | ⭐⭐⭐⭐ |
-| 4º SARSA Baseline | 57 ± 19 ts | 25,000 | ⭐ |
+| SARSA Baseline | 57 ± 19 ts | 25,000 | ⭐ |
 
 **Destaques:**
 - ✅ SARSA(λ) supera todos os métodos em **5x menos episódios** que Q-Learning
@@ -244,4 +244,5 @@ matplotlib==3.8.0
 Para análise técnica detalhada, consulte:
 - `RESULTADOS_FINAIS_COMPLETOS.md` - Análise profunda de todos os resultados
 - `PROJECT_STRUCTURE.py` - Estrutura completa do projeto
+
 
