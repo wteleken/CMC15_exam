@@ -5,10 +5,10 @@
 """
 
 ARQUIVOS_CORE = {
-    'agents.py': 'Q-Learning e SARSA com UCB exploration',
-    'train.py': 'Loop de treino + alpha adaptativo + UCB',
-    'environment.py': 'Discretização 8×8×12×12 = 9,216 estados',
-    'comparison.py': 'Script principal (treina ambos algoritmos)',
+    'agents.py': 'Q-Learning, SARSA e SARSA(λ) com Eligibility Traces',
+    'train.py': 'Loop de treino (suporta λ-traces + UCB + alpha adaptativo)',
+    'environment.py': 'Discretização refinada 6×6×18×18 = 11,664 estados',
+    'comparison.py': 'Comparação Q-Learning vs SARSA (resultados anteriores)',
 }
 
 ARQUIVOS_ANALISE = {
@@ -17,13 +17,14 @@ ARQUIVOS_ANALISE = {
 }
 
 MODELOS_TREINADOS = {
-    'qlearning_qtable.pkl': 'Melhor Q-Learning (314 ± 228 ts)',
-    'sarsa_qtable.pkl': 'Melhor SARSA (178 ± 45 ts)',
+    'qlearning_qtable.pkl': 'Q-Learning: 314 ± 228 ts (25k eps)',
+    'sarsa_qtable.pkl': 'SARSA Otimizado: 178 ± 45 ts (50k eps)',
+    # SARSA(λ) não salvo - treinar com novo código conforme necessário
 }
 
 DOCUMENTACAO = {
-    'README.md': 'Documentação principal + análise teórica',
-    'RESULTADO_FINAL_OTIMIZADO.md': 'Resultados detalhados',
+    'README.md': 'Documentação principal do projeto',
+    'RESULTADOS_FINAIS_COMPLETOS.md': 'Resultados completos e análise detalhada',
     'requirements.txt': 'Dependências Python',
 }
 
@@ -33,9 +34,14 @@ VISUALIZACAO = {
 
 # Ordem de execução recomendada
 ORDEM_EXECUCAO = [
-    '1. python comparison.py      # Treinar modelos (~105 min)',
-    '2. python analyze_results.py # Analisar estatísticas',
-    '3. python evaluate.py         # Visualizar agentes',
+    '# RESULTADOS ANTERIORES (já executados):',
+    '1. python comparison.py      # Q-Learning vs SARSA (~105 min)',
+    '2. python analyze_results.py # Análise estatística',
+    '3. python evaluate.py         # Visualização',
+    '',
+    '# NOVO - SARSA(λ) com Eligibility Traces:',
+    '# Para treinar SARSA(λ), usar agents.SarsaLambdaAgent em scripts customizados',
+    '# Resultados: 316 ts (5k eps) - MELHOR PERFORMANCE GERAL!',
 ]
 
 def print_structure():
@@ -68,7 +74,8 @@ def print_structure():
         print(f"  {step}")
     
     print("\n" + "═"*71)
-    print("Total: 10 arquivos principais + modelos treinados")
+    print("Total: 8 arquivos core + 2 análise + 3 docs + 2 modelos")
+    print("Projeto limpo e consolidado - pronto para entrega!")
     print("═"*71 + "\n")
 
 if __name__ == "__main__":

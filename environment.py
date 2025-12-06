@@ -45,10 +45,13 @@ def create_bins(state_shape=None):
     Cria os bins para discretização do espaço de estados do CartPole.
     
     O espaço de estados contínuo (4D) é discretizado em:
-    - Cart Position (x): 8 bins (padrão)
-    - Cart Velocity (x_dot): 8 bins (limites: -1.5 a 1.5 m/s) [MELHORADO]
-    - Pole Angle (theta): 12 bins (padrão)
-    - Pole Angular Velocity (theta_dot): 10 bins (limites: -150 a 150 deg/s) [MELHORADO]
+    - Cart Position (x): 6 bins (menor resolução - menos crítico)
+    - Cart Velocity (x_dot): 6 bins (menor resolução - menos crítico)
+    - Pole Angle (theta): 18 bins (alta resolução - CRÍTICO)
+    - Pole Angular Velocity (theta_dot): 18 bins (alta resolução - CRÍTICO)
+    
+    Novo shape padrão: (6, 6, 18, 18) = 11,664 estados (vs. 9,216 anterior)
+    Concentra resolução nas variáveis mais críticas para estabilidade.
     
     Returns:
         tuple: (cart_pos_bins, cart_vel_bins, pole_angle_bins, pole_ang_vel_bins)
@@ -56,11 +59,13 @@ def create_bins(state_shape=None):
     
     Args:
         state_shape (tuple): Formato (n_cart_pos, n_cart_vel, n_pole_angle, n_pole_vel).
-                            Se None, usa padrão (8, 8, 12, 12).
+                            Se None, usa padrão (6, 6, 18, 18).
     """
-    # Padrão: 8x8x12x12 = 9216 estados
+    # Padrão refinado: 6x6x18x18 = 11,664 estados
+    # Menor resolução em posição/velocidade do carrinho
+    # Maior resolução em ângulo/velocidade angular (variáveis críticas)
     if state_shape is None:
-        state_shape = (8, 8, 12, 12)
+        state_shape = (6, 6, 18, 18)
     
     n_cart_pos, n_cart_vel, n_pole_angle, n_pole_vel = state_shape
     

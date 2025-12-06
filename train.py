@@ -44,6 +44,10 @@ def train_agent(agent, bins, episodes=5000, is_sarsa=False, use_reward_shaping=T
         obs, info = env.reset()
         state = discretize_state(obs, bins)
         
+        # SARSA(λ): Zera vestígios no início de cada episódio
+        if hasattr(agent, 'reset_traces'):
+            agent.reset_traces()
+        
         # Seleciona primeira ação (UCB para primeiros 30% dos episódios se habilitado)
         if use_ucb and episode < int(0.3 * episodes):
             action = agent.select_action_ucb(state, c=2.0)
