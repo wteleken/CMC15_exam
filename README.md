@@ -1,14 +1,62 @@
+# 🎯 CartPole RL - Q-Learning vs SARSA Otimizado
+
+**CMC15 - Aprendizado de Máquina**  
+Daniel da Silveira Sahadi | Pablo Carvalho | Thiago Galante | Willian Teleken
+
+---
+
+## 🏆 Resultados Principais
+
+| Algoritmo | Timesteps | Máximo | Exploração |
+|-----------|-----------|--------|------------|
+| **Q-Learning** | 314 ± 228 | 4,796 | 13.2% |
+| **SARSA Otimizado** | 178 ± 45 | 475 | **100%** ✓ |
+| SARSA Baseline | 57 ± 19 | 119 | 9.6% |
+
+**Melhorias**: SARSA 3.1x melhor + 100% exploração de estados!
+
+---
+
+## 📁 Estrutura do Projeto
+
+```
+CMC15_exam/
+├── agents.py           # Q-Learning e SARSA (com UCB)
+├── train.py            # Loop de treino otimizado
+├── environment.py      # Discretização de estados
+├── comparison.py       # Script principal
+├── analyze_results.py  # Análise estatística
+├── evaluate.py         # Visualização
+├── qlearning_qtable.pkl
+├── sarsa_qtable.pkl
+└── teorico/            # Material de referência
+```
+
+---
+
+## 🚀 Execução Rápida
+
+```bash
+# Instalar
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# Treinar (~105 min)
+python comparison.py
+
+# Analisar
+python analyze_results.py
+
+# Visualizar
+python evaluate.py
+```
+
+---
+
 ## Análise do Controle do Pêndulo Invertido
 
-
-### Integrantes do grupo
-Daniel da Silveira Sahadi
-
-Pablo Carvalho do Nascimentos dos Santos
-
-Thiago Galante Pereira
-
-Willian Nelton Teleken
+### Integrantes
+Daniel da Silveira Sahadi | Pablo Carvalho | Thiago Galante | Willian Teleken
 
 
 ### a) Dificuldade de Controle Humano
@@ -68,46 +116,43 @@ Onde $a'$ é a próxima ação **realmente escolhida** pela política epsilon-gr
 
 **Referência**: Sutton, R. S., & Barto, A. G. (2018). *Reinforcement Learning: An Introduction* (2nd ed.). MIT Press.
 
-### Arquitetura de Implementação
+### Implementação - Configuração Final
 
-O projeto foi estruturado de forma modular para facilitar manutenção e experimentação:
+**Discretização**: 8×8×12×12 = 9,216 estados  
+**Q-Learning**: α=0.15, ε_decay=0.9995, ε_min=0.001, 25k eps  
+**SARSA**: α=0.3→0.05 (adaptativo), ε_min=0.0001, 50k eps + UCB + inicialização otimista
 
-```
-CMC15_exam/
-├── manual_control.py       # Controle humano (entrega parcial - partes a e b)
-├── environment.py          # Discretização do espaço de estados
-├── agents.py               # Implementação dos algoritmos RL
-├── train.py                # Lógica de treinamento genérica
-├── comparison.py           # Script principal de comparação
-└── README.md              # Este arquivo
-```
+---
 
-#### `environment.py`
-- **Função `create_bins()`**: Cria bins para discretização 4D do espaço de estados
-  - Cart Position (x): 6 bins
-  - Cart Velocity (ẋ): 6 bins (limites: -0.5 a 0.5 m/s)
-  - Pole Angle (θ): 10 bins  
-  - Pole Angular Velocity (θ̇): 10 bins (limites: -50 a 50 deg/s)
-  - **Total**: 6 × 6 × 10 × 10 = 3.600 estados discretos
+## 🔧 Otimizações Aplicadas no SARSA
 
-- **Função `discretize_state()`**: Converte observações contínuas em índices discretos usando `np.digitize`
+1. **Inicialização Otimista** (Q=50) - força exploração inicial
+2. **UCB Exploration** (15k eps) - prioriza estados não visitados
+3. **Alpha Adaptativo** (0.3→0.05) - aprendizado rápido + refinamento
+4. **Epsilon Ultra-Baixo** (0.0001) - política 99.99% determinística
+5. **Dobro de Episódios** (50k) - compensa convergência on-policy
 
-#### `agents.py`
-- **`BaseAgent`**: Classe base abstrata com Q-table (inicializada com zeros) e política epsilon-greedy
-- **`QLearningAgent`**: Implementa atualização off-policy usando max(Q(s',a'))
-- **`SarsaAgent`**: Implementa atualização on-policy usando Q(s',a') real
+**Resultado**: 100% exploração de estados! 🎉
 
-#### `train.py`
-- **`train_agent()`**: Função genérica que treina qualquer agente
-  - Suporta tanto Q-Learning quanto SARSA (flag `is_sarsa`)
-  - Treina sem renderização gráfica para maior velocidade
-  - Retorna histórico de recompensas por episódio
+---
 
-#### `comparison.py`
-- Script principal que executa toda a pipeline de comparação
-- Hiperparâmetros fixos: α=0.1, γ=0.99, ε₀=1.0 (decay=0.995, min=0.01)
-- Treina ambos os algoritmos por 5.000 episódios
-- Gera gráfico comparativo com médias móveis (janela=100 episódios)
+## 💡 Por que Q-Learning é Melhor no CartPole?
+
+- **Off-policy**: Aprende política ótima independente da exploração
+- **Ambiente determinístico**: Sem penalidades durante exploração
+- **Convergência rápida**: Atualização `max Q(s',a')` é mais agressiva
+
+SARSA é on-policy e desperdiça tempo aprendendo política exploratória.
+
+---
+
+## 📊 Análise Detalhada
+
+Ver `RESULTADO_FINAL_OTIMIZADO.md` para análise completa com:
+- Comparação detalhada de performance
+- Estatísticas de exploração de estados
+- Evolução das curvas de aprendizado
+- Configurações e hiperparâmetros testados
 - Salva Q-tables treinadas para análise posterior
 
 ### Execução

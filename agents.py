@@ -39,10 +39,43 @@ class BaseAgent(ABC):
         self.epsilon_decay = epsilon_decay
         self.epsilon_min = epsilon_min
         
-        # Inicializa Q-table com zeros
-        # Shape: (*state_shape, n_actions) = (6, 6, 10, 10, 2)
+        # Inicializa Q-table - otimista para SARSA, zeros para Q-Learning
+        # Shape: (*state_shape, n_actions) = (8, 8, 12, 12, 2)
         q_shape = state_shape + (n_actions,)
         self.q_table = np.zeros(q_shape)
+        
+        # Contador de visitas para UCB exploration (melhor exploração de estados)
+        self.visit_counts = np.zeros(q_shape)
+        self.total_steps = 0
+    
+    def select_action_ucb(self, state, c=2.0):
+        """
+        Seleciona ação usando Upper Confidence Bound para melhor exploração.
+        
+        Args:
+            state (tuple): Estado discretizado
+            c (float): Constante de exploração (maior = mais exploração)
+        
+        Returns:
+            int: Ação escolhida
+        """
+        if self.total_steps == 0:
+            return np.random.randint(self.n_actions)
+        
+        q_values = self.q_table[state]
+        visit_counts = self.visit_counts[state]
+        
+        # Bonus de exploração: c * sqrt(ln(total) / visits)
+        # Estados não visitados recebem bonus infinito
+        bonus = np.zeros(self.n_actions)
+        for a in range(self.n_actions):
+            if visit_counts[a] == 0:
+                bonus[a] = float('inf')  # Prioriza estados nunca visitados
+            else:
+                bonus[a] = c * np.sqrt(np.log(self.total_steps) / visit_counts[a])
+        
+        ucb_values = q_values + bonus
+        return np.argmax(ucb_values)
     
     def select_action(self, state):
         """
@@ -54,12 +87,18 @@ class BaseAgent(ABC):
         Returns:
             int: Ação selecionada (0 ou 1)
         """
+        self.total_steps += 1
+        
         # Exploração: ação aleatória
         if np.random.random() < self.epsilon:
-            return np.random.randint(self.n_actions)
+            action = np.random.randint(self.n_actions)
+        else:
+            # Exploração: melhor ação conhecida (greedy)
+            action = np.argmax(self.q_table[state])
         
-        # Exploração: melhor ação conhecida (greedy)
-        return np.argmax(self.q_table[state])
+        # Atualiza contador de visitas
+        self.visit_counts[state][action] += 1
+        return action
     
     def decay_epsilon(self):
         """Aplica decaimento ao epsilon após cada episódio."""

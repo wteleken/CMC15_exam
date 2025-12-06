@@ -40,36 +40,40 @@ def adaptive_linspace(start, end, num, critical_center=0.0, concentration=2.0):
     return bins
 
 
-def create_bins():
+def create_bins(state_shape=None):
     """
     Cria os bins para discretização do espaço de estados do CartPole.
     
     O espaço de estados contínuo (4D) é discretizado em:
-    - Cart Position (x): 6 bins
-    - Cart Velocity (x_dot): 6 bins (limites: -1.5 a 1.5 m/s) [MELHORADO]
-    - Pole Angle (theta): 10 bins
+    - Cart Position (x): 8 bins (padrão)
+    - Cart Velocity (x_dot): 8 bins (limites: -1.5 a 1.5 m/s) [MELHORADO]
+    - Pole Angle (theta): 12 bins (padrão)
     - Pole Angular Velocity (theta_dot): 10 bins (limites: -150 a 150 deg/s) [MELHORADO]
     
     Returns:
         tuple: (cart_pos_bins, cart_vel_bins, pole_angle_bins, pole_ang_vel_bins)
                Cada elemento é um array numpy com os limites dos bins.
+    
+    Args:
+        state_shape (tuple): Formato (n_cart_pos, n_cart_vel, n_pole_angle, n_pole_vel).
+                            Se None, usa padrão (8, 8, 12, 12).
     """
-    # FASE 2: Binning adaptativo não-uniforme com 8x8x12x12 = 9216 estados
+    # Padrão: 8x8x12x12 = 9216 estados
+    if state_shape is None:
+        state_shape = (8, 8, 12, 12)
+    
+    n_cart_pos, n_cart_vel, n_pole_angle, n_pole_vel = state_shape
+    
+    # FASE 2: Binning adaptativo não-uniforme
     # Concentra resolução nas regiões críticas (θ≈0, velocidades baixas)
     
-    # 8 bins para posição e velocidade do carrinho
-    # concentration=1.5 para posição (menos crítico)
-    cart_pos_bins = adaptive_linspace(-2.4, 2.4, 8 - 1, critical_center=0.0, concentration=1.5)
+    # Bins para posição e velocidade do carrinho
+    cart_pos_bins = adaptive_linspace(-2.4, 2.4, n_cart_pos - 1, critical_center=0.0, concentration=1.5)
+    cart_vel_bins = adaptive_linspace(-1.5, 1.5, n_cart_vel - 1, critical_center=0.0, concentration=2.0)
     
-    # concentration=2.0 para velocidade (mais crítico para estabilidade)
-    cart_vel_bins = adaptive_linspace(-1.5, 1.5, 8 - 1, critical_center=0.0, concentration=2.0)
-    
-    # 12 bins para ângulo e velocidade angular (mais críticos)
-    # concentration=2.5 para ângulo (extremamente crítico - vertical é θ=0)
-    pole_angle_bins = adaptive_linspace(-0.418, 0.418, 12 - 1, critical_center=0.0, concentration=2.5)
-    
-    # concentration=2.0 para velocidade angular (crítico para controle)
-    pole_ang_vel_bins = adaptive_linspace(-2.618, 2.618, 12 - 1, critical_center=0.0, concentration=2.0)
+    # Bins para ângulo e velocidade angular (mais críticos)
+    pole_angle_bins = adaptive_linspace(-0.418, 0.418, n_pole_angle - 1, critical_center=0.0, concentration=2.5)
+    pole_ang_vel_bins = adaptive_linspace(-2.618, 2.618, n_pole_vel - 1, critical_center=0.0, concentration=2.0)
     
     return (cart_pos_bins, cart_vel_bins, pole_angle_bins, pole_ang_vel_bins)
 

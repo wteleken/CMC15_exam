@@ -38,30 +38,48 @@ def main():
     # Configuração de seeds para reprodutibilidade
     np.random.seed(42)
     
-    # Hiperparâmetros melhorados - FASE 1A + FASE 2
-    ALPHA = 0.2              # Aumentado de 0.1 para aprendizado mais rápido
-    GAMMA = 0.99             # Mantido
-    EPSILON = 1.0            # Mantido
-    EPSILON_DECAY = 0.9995   # FASE 1A: Decay muito mais lento (~9200 ep para ε=0.05)
-    EPSILON_MIN = 0.05       # FASE 1A: Maior que antes para manter exploração
-    EPISODES = 12000         # Mais episódios para convergência completa
+    # Hiperparâmetros otimizados
+    # Q-Learning: config conservadora comprovada
+    # SARSA: config agressiva para maximizar exploração e convergência
     
-    # Configuração do espaço de estados discreto - FASE 2
-    STATE_SHAPE = (8, 8, 12, 12)  # FASE 2: Binning adaptativo (9216 estados)
-    N_ACTIONS = 2  # Esquerda ou Direita
+    # Comum para ambos
+    GAMMA = 0.99
+    EPSILON = 1.0
+    N_ACTIONS = 2
+    STATE_SHAPE = (8, 8, 12, 12)  # 9216 estados
+    
+    # Específico Q-Learning (mantém o que funcionou)
+    QL_ALPHA = 0.15
+    QL_EPSILON_DECAY = 0.9995
+    QL_EPSILON_MIN = 0.001
+    QL_EPISODES = 25000
+    
+    # Específico SARSA (otimizado para exploração + convergência)
+    SARSA_ALPHA_START = 0.3      # Aprende rápido no início
+    SARSA_ALPHA_END = 0.05       # Refina no final
+    SARSA_EPSILON_DECAY = 0.9993 # Decay mais rápido (reduz exploração aleatória)
+    SARSA_EPSILON_MIN = 0.0001   # Ultra-baixo para convergência determinística
+    SARSA_EPISODES = 50000       # Dobro do tempo para convergência completa
+    SARSA_USE_UCB = True         # Usa UCB para melhor exploração de estados
     
     # Cria bins de discretização
-    bins = create_bins()
+    bins = create_bins(STATE_SHAPE)
     
-    print(f"\nHiperparâmetros:")
-    print(f"  - Alpha (taxa de aprendizado): {ALPHA}")
-    print(f"  - Gamma (fator de desconto): {GAMMA}")
-    print(f"  - Epsilon inicial: {EPSILON}")
-    print(f"  - Epsilon decay: {EPSILON_DECAY}")
-    print(f"  - Epsilon mínimo: {EPSILON_MIN}")
-    print(f"  - Episódios de treinamento: {EPISODES}")
+    print(f"\nConfiguração do Ambiente:")
     print(f"  - Espaço de estados: {STATE_SHAPE} = {np.prod(STATE_SHAPE)} estados")
     print(f"  - Ações: {N_ACTIONS}")
+    print(f"  - Gamma: {GAMMA}")
+    
+    print(f"\nQ-Learning (config conservadora):")
+    print(f"  - Alpha: {QL_ALPHA}")
+    print(f"  - Epsilon decay: {QL_EPSILON_DECAY}, min: {QL_EPSILON_MIN}")
+    print(f"  - Episódios: {QL_EPISODES}")
+    
+    print(f"\nSARSA (config otimizada para exploração):")
+    print(f"  - Alpha: {SARSA_ALPHA_START} → {SARSA_ALPHA_END} (adaptativo)")
+    print(f"  - Epsilon decay: {SARSA_EPSILON_DECAY}, min: {SARSA_EPSILON_MIN}")
+    print(f"  - Episódios: {SARSA_EPISODES}")
+    print(f"  - UCB Exploration: {'Habilitado' if SARSA_USE_UCB else 'Desabilitado'}")
     
     # ========================================================================
     # TREINAMENTO Q-LEARNING
@@ -73,19 +91,19 @@ def main():
     qlearning_agent = QLearningAgent(
         state_shape=STATE_SHAPE,
         n_actions=N_ACTIONS,
-        alpha=ALPHA,
+        alpha=QL_ALPHA,
         gamma=GAMMA,
         epsilon=EPSILON,
-        epsilon_decay=EPSILON_DECAY,
-        epsilon_min=EPSILON_MIN
+        epsilon_decay=QL_EPSILON_DECAY,
+        epsilon_min=QL_EPSILON_MIN
     )
     
     qlearning_rewards = train_agent(
         agent=qlearning_agent,
         bins=bins,
-        episodes=EPISODES,
+        episodes=QL_EPISODES,
         is_sarsa=False,
-        use_reward_shaping=True,  # FASE 1B
+        use_reward_shaping=True,
         verbose=True
     )
     
@@ -98,7 +116,7 @@ def main():
     # TREINAMENTO SARSA
     # ========================================================================
     print("\n" + "=" * 70)
-    print("TREINANDO SARSA (On-policy)")
+    print("TREINANDO SARSA (On-policy com melhorias)")
     print("=" * 70)
     
     # Reset da seed para comparação justa
@@ -107,19 +125,26 @@ def main():
     sarsa_agent = SarsaAgent(
         state_shape=STATE_SHAPE,
         n_actions=N_ACTIONS,
-        alpha=ALPHA,
+        alpha=SARSA_ALPHA_START,  # Será adaptado durante treino
         gamma=GAMMA,
         epsilon=EPSILON,
-        epsilon_decay=EPSILON_DECAY,
-        epsilon_min=EPSILON_MIN
+        epsilon_decay=SARSA_EPSILON_DECAY,
+        epsilon_min=SARSA_EPSILON_MIN
     )
+    
+    # INICIALIZAÇÃO OTIMISTA: força exploração eficiente no início
+    sarsa_agent.q_table = np.ones(sarsa_agent.q_table.shape) * 50.0
+    print("✓ Q-table inicializada otimisticamente (50.0)")
     
     sarsa_rewards = train_agent(
         agent=sarsa_agent,
         bins=bins,
-        episodes=EPISODES,
+        episodes=SARSA_EPISODES,
         is_sarsa=True,
-        use_reward_shaping=True,  # FASE 1B
+        use_reward_shaping=True,
+        use_ucb=SARSA_USE_UCB,
+        alpha_start=SARSA_ALPHA_START,
+        alpha_end=SARSA_ALPHA_END,
         verbose=True
     )
     
@@ -165,13 +190,17 @@ def main():
     sarsa_smooth = moving_average(sarsa_rewards, window)
     
     # Cria figura
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(14, 7))
     
-    # Plot das curvas suavizadas
-    episodes_range = range(window - 1, EPISODES)
-    plt.plot(episodes_range, qlearning_smooth, label='Q-Learning (Off-policy)', 
+    # Plot das curvas suavizadas (cada uma com seu próprio range)
+    qlearning_range = range(window - 1, len(qlearning_rewards))
+    sarsa_range = range(window - 1, len(sarsa_rewards))
+    
+    plt.plot(qlearning_range, qlearning_smooth, 
+             label=f'Q-Learning ({len(qlearning_rewards)} eps, final: {qlearning_final:.1f} ts)', 
              linewidth=2, color='blue', alpha=0.8)
-    plt.plot(episodes_range, sarsa_smooth, label='SARSA (On-policy)', 
+    plt.plot(sarsa_range, sarsa_smooth, 
+             label=f'SARSA ({len(sarsa_rewards)} eps, final: {sarsa_final:.1f} ts)', 
              linewidth=2, color='red', alpha=0.8)
     
     # Configurações do gráfico
